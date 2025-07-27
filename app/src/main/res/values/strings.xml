@@ -1,3 +1,6 @@
 <resources>
-    <string name="app_name">flashmind</string>
+    <string name="app_name">f l a s h m i n d</string>
+    <string name="welcome_txt1">              Welcome to FlashMind!     |</string>
+    <string name="welcome_txt2"> |  Learn faster with flashcards.</string>
+    <string name="start">get started</string>
 </resources>
