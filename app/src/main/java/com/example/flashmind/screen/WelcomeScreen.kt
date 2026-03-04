@@ -26,10 +26,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.flashmind.R
+import com.example.flashmind.navigation.Screens
 
 @Composable
-fun WelcomeScreen() {
+fun WelcomeScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .background(colorResource(R.color.purple2))
@@ -66,7 +68,7 @@ fun WelcomeScreen() {
             }
         }
         Button(
-            onClick = { TODO() },
+            onClick = { navController.navigate(Screens.Login.route) },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.White
             ),

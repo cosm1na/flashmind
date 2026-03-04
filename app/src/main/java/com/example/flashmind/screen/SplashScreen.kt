@@ -18,13 +18,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.flashmind.R
+import com.example.flashmind.navigation.Screens
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen() {
+fun SplashScreen(
+    navController: NavController
+) {
     LaunchedEffect(Unit) {
         delay(2000)
+        navController.navigate(Screens.Welcome.route) {
+            popUpTo(Screens.Splash.route) { inclusive = true }
+        }
     }
 
     Box(
