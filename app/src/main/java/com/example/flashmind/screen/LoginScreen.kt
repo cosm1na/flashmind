@@ -1,8 +1,8 @@
 package com.example.flashmind.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -25,10 +25,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,8 +46,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.flashmind.R
+import com.example.flashmind.SessionManager
 import com.example.flashmind.navigation.Screens
 import com.example.flashmind.ui.theme.FlashmindTheme
+import kotlinx.coroutines.launch
+
+import com.example.flashmind.network.AuthRequest
+import com.example.flashmind.network.RetrofitClient
 
 @Composable
 fun LoginScreen(
@@ -54,6 +61,10 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
 
     Box(
         modifier = Modifier
@@ -143,7 +154,43 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(30.dp))
 
                     Button(
-                        onClick = { onLoginClick(email, password) },
+                        onClick = {
+                            if (email.isNotEmpty() && password.isNotEmpty()) {
+                                coroutineScope.launch {
+                                    try {
+                                        val pachet = AuthRequest(email, password)
+                                        val raspuns = RetrofitClient.api.loginUser(pachet)
+
+                                        if (raspuns.isSuccessful) {
+                                            val pachetLogin = raspuns.body()
+
+                                            if (pachetLogin != null && pachetLogin.succes) {
+                                                Toast.makeText(context, pachetLogin.mesaj, Toast.LENGTH_SHORT).show()
+
+                                                sessionManager.salveazaStareaDeLogin(true)
+
+                                                if (pachetLogin.userId != null) {
+                                                    sessionManager.salveazaUserId(pachetLogin.userId)
+                                                }
+
+                                                navController.navigate(Screens.DeckList.route) {
+                                                    popUpTo(Screens.Login.route) { inclusive = true }
+                                                }
+                                            } else {
+                                                val mesajEroare = pachetLogin?.mesaj ?: "Eroare de autentificare!"
+                                                Toast.makeText(context, mesajEroare, Toast.LENGTH_LONG).show()
+                                            }
+                                        } else {
+                                            Toast.makeText(context, "Eroare de conexiune cu serverul!", Toast.LENGTH_LONG).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Nu mă pot conecta la server!", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            } else {
+                                Toast.makeText(context, "Scrie emailul și parola!", Toast.LENGTH_SHORT).show()
+                            }
+                        },
                         shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.White

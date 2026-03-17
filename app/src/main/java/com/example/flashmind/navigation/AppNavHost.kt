@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -22,6 +23,8 @@ import com.example.flashmind.screen.StudyScreen
 import com.example.flashmind.screen.ViewCardsScreen
 import com.example.flashmind.viewmodel.FlashcardViewModel
 
+import com.example.flashmind.SessionManager
+
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -30,7 +33,12 @@ fun AppNavHost(
 ) {
     val context = LocalContext.current
 
-    NavHost(navController = navController, startDestination = startDestination) {
+    val sessionManager = remember { SessionManager(context) }
+    val esteLogat = sessionManager.verificaDacaEsteLogat()
+
+    val rutaDeStartReala = if (esteLogat) Screens.DeckList.route else startDestination
+
+    NavHost(navController = navController, startDestination = rutaDeStartReala) {
 
         composable(Screens.Splash.route) { SplashScreen(navController) }
         composable(Screens.Welcome.route) { WelcomeScreen(navController) }
@@ -38,18 +46,7 @@ fun AppNavHost(
         composable(Screens.Login.route) {
             LoginScreen(
                 navController = navController,
-                onLoginClick = { email, password ->
-                    if (email.isNotEmpty() && password.isNotEmpty()) {
-                        navController.navigate(Screens.DeckList.route) {
-                            popUpTo(Screens.Login.route) { inclusive = true }
-                        }
-                    } else {
-                        Toast.makeText(
-                            context,
-                            "Please enter your email and password",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                onLoginClick = { _, _ ->
                 }
             )
         }
@@ -57,12 +54,7 @@ fun AppNavHost(
         composable(Screens.CreateAccount.route) {
             CreateAccount(
                 navController = navController,
-                onSignUpClick = { email, password ->
-                    if (email.isNotEmpty() && password.isNotEmpty()) {
-                        navController.navigate(Screens.DeckList.route) {
-                            popUpTo(Screens.CreateAccount.route) { inclusive = true }
-                        }
-                    }
+                onSignUpClick = { _, _ ->
                 }
             )
         }
@@ -79,7 +71,8 @@ fun AppNavHost(
                     val selectedDeck = decks.find { it.id == deckId }
                     val selectedDeckName = selectedDeck?.title ?: "Unknown Deck"
 
-                    navController.navigate(Screens.ViewCards.createRoute(deckId, selectedDeckName))                },
+                    navController.navigate(Screens.ViewCards.createRoute(deckId, selectedDeckName))
+                },
                 onBackClick = {
                     navController.navigate(Screens.Welcome.route) {
                         popUpTo(0)
@@ -95,7 +88,10 @@ fun AppNavHost(
             CreateDeckScreen(
                 navController = navController,
                 onCreateClick = { deckName ->
-                    viewModel.createDeck(deckName)
+
+                    val userId = sessionManager.iaUserId()
+
+                    viewModel.createDeck(deckName, userId)
 
                     navController.popBackStack()
                 },
@@ -148,7 +144,6 @@ fun AppNavHost(
                 navController = navController,
                 onSaveCardClick = { frontText, backText ->
                     viewModel.addCard(deckId, frontText, backText)
-
                     navController.popBackStack()
                 },
                 onBackClick = { navController.popBackStack() }

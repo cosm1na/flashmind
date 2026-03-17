@@ -1,5 +1,6 @@
 package com.example.flashmind.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,10 +26,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,6 +48,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.flashmind.R
 import com.example.flashmind.ui.theme.FlashmindTheme
+import kotlinx.coroutines.launch
+
+import com.example.flashmind.network.AuthRequest
+import com.example.flashmind.network.RetrofitClient
 
 @Composable
 fun CreateAccount(
@@ -54,6 +61,9 @@ fun CreateAccount(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -132,7 +142,7 @@ fun CreateAccount(
                         onValueChange = { password = it },
                         label = { Text("password") },
                         singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(), // Ascunde parola
+                        visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Next
@@ -151,7 +161,7 @@ fun CreateAccount(
                         onValueChange = { confirmPassword = it },
                         label = { Text("confirm password") },
                         singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(), // Ascunde parola
+                        visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Done
@@ -167,8 +177,31 @@ fun CreateAccount(
 
                     Button(
                         onClick = {
-                            if (password == confirmPassword && password.isNotEmpty()) {
-                                onSignUpClick(email, password)
+                            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty()) {
+                                if (password == confirmPassword) {
+                                    coroutineScope.launch {
+                                        try {
+                                            val pachet = AuthRequest(email, password)
+                                            val raspuns = RetrofitClient.api.registerUser(pachet)
+
+                                            if (raspuns.isSuccessful) {
+                                                val mesaj = raspuns.body()?.string() ?: "Cont creat cu succes!"
+                                                Toast.makeText(context, mesaj, Toast.LENGTH_LONG).show()
+
+                                                navController.popBackStack()
+                                            } else {
+                                                val mesajEroare = raspuns.errorBody()?.string() ?: "Eroare la creare cont!"
+                                                Toast.makeText(context, mesajEroare, Toast.LENGTH_LONG).show()
+                                            }
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Nu mă pot conecta la server!", Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Parolele nu se potrivesc!", Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                Toast.makeText(context, "Completează toate câmpurile!", Toast.LENGTH_SHORT).show()
                             }
                         },
                         shape = RoundedCornerShape(50),
