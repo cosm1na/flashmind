@@ -24,6 +24,7 @@ import com.example.flashmind.screen.ViewCardsScreen
 import com.example.flashmind.viewmodel.FlashcardViewModel
 
 import com.example.flashmind.SessionManager
+import com.example.flashmind.screen.SettingsScreen
 
 @Composable
 fun AppNavHost(
@@ -43,11 +44,11 @@ fun AppNavHost(
         composable(Screens.Splash.route) { SplashScreen(navController) }
         composable(Screens.Welcome.route) { WelcomeScreen(navController) }
 
-        composable(Screens.Login.route) {
+        composable(route = Screens.Login.route) {
             LoginScreen(
                 navController = navController,
-                onLoginClick = { _, _ ->
-                }
+                onLoginClick = { _, _ -> },
+                flashcardViewModel = viewModel
             )
         }
 
@@ -61,6 +62,7 @@ fun AppNavHost(
 
         composable(Screens.DeckList.route) {
             val decks by viewModel.decks.collectAsState()
+            val userId = sessionManager.iaUserId()
 
             DeckListScreen(
                 decks = decks,
@@ -73,13 +75,19 @@ fun AppNavHost(
 
                     navController.navigate(Screens.ViewCards.createRoute(deckId, selectedDeckName))
                 },
-                onBackClick = {
-                    navController.navigate(Screens.Welcome.route) {
-                        popUpTo(0)
-                    }
-                },
+//                onBackClick = {
+//                    navController.navigate(Screens.Welcome.route) {
+//                        popUpTo(0)
+//                    }
+//                },
                 onDeleteDeckClick = { deckToDelete ->
                     viewModel.deleteDeck(deckToDelete)
+                },
+                onEditDeckClick = { deckToEdit, newTitle ->
+                    viewModel.updateDeck(deckToEdit, newTitle, userId)
+                },
+                onSettingsClick = {
+                    navController.navigate("settings")
                 }
             )
         }
@@ -167,6 +175,17 @@ fun AppNavHost(
                 deckName = deckName,
                 cards = cards,
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = "settings") {
+            SettingsScreen(
+                navController = navController,
+                sessionManager = sessionManager,
+                flashcardViewModel = viewModel,
+                        onBackClick = {
+                    navController.popBackStack()
+                }
             )
         }
     }

@@ -24,4 +24,20 @@ class FlashcardRepository(private val dao: FlashcardDao) {
     suspend fun updateCard(card: CardEntity) {
         dao.updateCard(card)
     }
+
+    suspend fun updateDeck(deck: DeckEntity){
+        dao.updateDeck(deck)
+    }
+
+    suspend fun clearLocalDatabase() {
+        dao.clearAll()
+    }
+
+    suspend fun saveDecksFromServer(decks: List<DeckEntity>) {
+        dao.insertDecks(decks)
+    }
+
+    suspend fun saveCardsFromServer(cards: List<CardEntity>) {
+        dao.insertCards(cards)
+    }
 }

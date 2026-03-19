@@ -53,11 +53,13 @@ import kotlinx.coroutines.launch
 
 import com.example.flashmind.network.AuthRequest
 import com.example.flashmind.network.RetrofitClient
+import com.example.flashmind.viewmodel.FlashcardViewModel
 
 @Composable
 fun LoginScreen(
     navController: NavController,
-    onLoginClick: (String, String) -> Unit = { _, _ -> }
+    onLoginClick: (String, String) -> Unit = { _, _ -> },
+    flashcardViewModel: FlashcardViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -171,6 +173,8 @@ fun LoginScreen(
 
                                                 if (pachetLogin.userId != null) {
                                                     sessionManager.salveazaUserId(pachetLogin.userId)
+
+                                                    flashcardViewModel.sincronizeazaDateDePeServer(pachetLogin.userId)
                                                 }
 
                                                 navController.navigate(Screens.DeckList.route) {
@@ -227,13 +231,5 @@ fun LoginScreen(
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    FlashmindTheme {
-        LoginScreen(navController = rememberNavController())
     }
 }

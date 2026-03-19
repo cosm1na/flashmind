@@ -21,4 +21,16 @@ class SessionManager(context: Context) {
     fun iaUserId(): Int {
         return prefs.getInt("USER_ID", -1)
     }
+
+    fun salveazaEmail(email: String) {
+        prefs.edit().putString("USER_EMAIL", email).apply()
+    }
+
+    fun getEmail(): String? {
+        return prefs.getString("USER_EMAIL", null)
+    }
+    fun logout() {
+        prefs.edit().clear().apply()
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.example.flashmind.navigation
 
+
 sealed class Screens(val route: String) {
     data object Splash : Screens("splash_screen")
     data object Welcome : Screens("welcome_screen")
@@ -16,4 +17,6 @@ sealed class Screens(val route: String) {
     data object Study : Screens("study_screen/{deckId}/{deckName}") {
         fun createRoute(deckId: Int, deckName: String) = "study_screen/$deckId/$deckName"
     }
+
+    data object Settings : Screens ("settings_screen")
 }

@@ -6,6 +6,8 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.DELETE
+import retrofit2.http.PUT
 
 interface ApiService {
 
@@ -26,5 +28,20 @@ interface ApiService {
 
     @GET("/cards/{deckId}")
     suspend fun getCards(@Path("deckId") deckId: Int): Response<List<CardRequest>>
+
+    @DELETE("/decks/{id}")
+    suspend fun deleteDeck(@Path("id") deckId: Int): Response<ResponseBody>
+
+    @DELETE("/cards/{id}")
+    suspend fun deleteCard(@Path("id") cardId: Int): Response<ResponseBody>
+
+    @PUT("/cards/{id}")
+    suspend fun updateCard(
+        @Path("id") cardId: Int,
+        @Body card: CardRequest
+    ): Response<ResponseBody>
+
+    @PUT("/decks/{id}")
+    suspend fun updateDeck(@Path("id") deckId: Int, @Body request: DeckRequest): Response<ResponseBody>
 
 }

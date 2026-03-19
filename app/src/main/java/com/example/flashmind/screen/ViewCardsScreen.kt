@@ -3,6 +3,7 @@ package com.example.flashmind.screen
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,19 +18,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -51,9 +56,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.flashmind.R
 import com.example.flashmind.ui.theme.FlashmindTheme
 import com.example.flashmind.data.CardEntity
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
 
 @Composable
 fun ViewCardsScreen(
@@ -65,11 +67,10 @@ fun ViewCardsScreen(
     onBackClick: () -> Unit = {},
     onDeleteCardClick: (CardEntity) -> Unit = {},
     onEditCardClick: (CardEntity) -> Unit = {}
-
 ) {
     val context = LocalContext.current
     var cardToEdit by remember { mutableStateOf<CardEntity?>(null) }
-
+    var cardToDelete by remember { mutableStateOf<CardEntity?>(null) }
 
     Box(
         modifier = Modifier
@@ -143,14 +144,17 @@ fun ViewCardsScreen(
                     contentPadding = PaddingValues(horizontal = 40.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(cards) { card ->
+                    items(
+                        items = cards,
+                        key = { card -> card.id }
+                    ) { card ->
                         FlashcardItem(
                             cardTitle = card.frontText,
                             onEdit = {
                                 cardToEdit = card
                             },
                             onDelete = {
-                                onDeleteCardClick(card)
+                                cardToDelete = card
                             }
                         )
                     }
@@ -213,35 +217,69 @@ fun ViewCardsScreen(
                             value = editFront,
                             onValueChange = { editFront = it },
                             label = { Text("Front (Question)") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         OutlinedTextField(
                             value = editBack,
                             onValueChange = { editBack = it },
                             label = { Text("Back (Answer)") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
                 },
                 confirmButton = {
                     Button(
                         onClick = {
-                            val updatedCard = cardToEdit!!.copy(
-                                frontText = editFront,
-                                backText = editBack
-                            )
-                            onEditCardClick(updatedCard)
-                            cardToEdit = null
+                            if (editFront.isNotBlank() && editBack.isNotBlank()) {
+                                val updatedCard = cardToEdit!!.copy(
+                                    frontText = editFront,
+                                    backText = editBack
+                                )
+                                onEditCardClick(updatedCard)
+                                cardToEdit = null
+                            } else {
+                                Toast.makeText(context, "Fields cannot be empty", Toast.LENGTH_SHORT).show()
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.purple1))
                     ) {
-                        Text("Save", color = Color.Black)
+                        Text("Save", color = Color.Black, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { cardToEdit = null }) {
-                        Text("Cancel", color = Color.Black)
+                        Text("Cancel", color = Color.Gray)
+                    }
+                }
+            )
+        }
+
+        if (cardToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { cardToDelete = null },
+                title = {
+                    Text(text = "Delete Card", fontWeight = FontWeight.Bold, color = Color.Black)
+                },
+                text = {
+                    Text(
+                        text = "Are you sure you want to delete this card?\n\n\"${cardToDelete?.frontText}\"",
+                        color = Color.DarkGray
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        onDeleteCardClick(cardToDelete!!)
+                        cardToDelete = null
+                    }) {
+                        Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { cardToDelete = null }) {
+                        Text("Cancel", color = Color.Gray)
                     }
                 }
             )
@@ -255,27 +293,63 @@ fun FlashcardItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(50.dp),
-        shape = RoundedCornerShape(24.dp),
+            .height(60.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = cardTitle, fontWeight = FontWeight.Bold, color = Color.Black,
-                modifier = Modifier.align(Alignment.Center)
+                text = cardTitle,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.weight(1f)
             )
-            Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-                IconButton(onClick = { expanded = true }) {
-                    Icon(imageVector = Icons.Default.MoreVert, contentDescription = "Options", tint = Color.Gray)
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Buton EDIT (Mov închis)
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .background(colorResource(R.color.purple2).copy(alpha = 0.2f))
+                        .clickable { onEdit() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit Card",
+                        tint = colorResource(R.color.purple2),
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    DropdownMenuItem(text = { Text("Edit") }, onClick = { expanded = false; onEdit() })
-                    DropdownMenuItem(text = { Text("Delete", color = Color.Red) }, onClick = { expanded = false; onDelete() })
+
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .background(Color.LightGray.copy(alpha = 0.3f))
+                        .clickable { onDelete() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Card",
+                        tint = Color.Black,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }

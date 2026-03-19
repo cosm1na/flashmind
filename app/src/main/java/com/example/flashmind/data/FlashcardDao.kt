@@ -25,4 +25,16 @@ interface FlashcardDao {
     @Update
     suspend fun updateCard(card: CardEntity)
 
+    @Update
+    suspend fun updateDeck(deck: DeckEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDecks(decks: List<DeckEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCards(cards: List<CardEntity>)
+
+    @Query("DELETE FROM decks")
+    suspend fun clearAll()
+
 }
