@@ -8,6 +8,7 @@ sealed class Screens(val route: String) {
     data object CreateAccount : Screens("create_account_screen")
     data object DeckList : Screens("deck_list_screen")
     data object CreateDeck : Screens("create_deck_screen")
+    object ManageAccount : Screens("manage_account_screen")
     data object ViewCards : Screens("view_cards_screen/{deckId}/{deckName}") {
         fun createRoute(deckId: Int, deckName: String) = "view_cards_screen/$deckId/$deckName"
     }

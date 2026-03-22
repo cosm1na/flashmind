@@ -20,5 +20,8 @@ data class CardEntity(
     val id: Int = 0,
     val deckId: Int,
     val frontText: String,
-    val backText: String
+    val backText: String,
+
+    val boxNumber: Int = 1,
+    val nextReviewDate: Long = System.currentTimeMillis()
 )

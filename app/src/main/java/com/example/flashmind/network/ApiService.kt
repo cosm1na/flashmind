@@ -44,4 +44,9 @@ interface ApiService {
     @PUT("/decks/{id}")
     suspend fun updateDeck(@Path("id") deckId: Int, @Body request: DeckRequest): Response<ResponseBody>
 
+    @PUT("/users/{id}")
+    suspend fun updateProfile(
+        @Path("id") userId: Int,
+        @Body request: UpdateProfileRequest
+    ): Response<ResponseBody>
 }

@@ -188,4 +188,50 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
             }
         }
     }
+
+    fun evalueazaCartonas(card: CardEntity, aStiut: Boolean) {
+        viewModelScope.launch {
+            val nouaCutie: Int
+            val intervalMinute: Long
+
+            if (aStiut) {
+                nouaCutie = if (card.boxNumber < 5) card.boxNumber + 1 else 5
+
+                intervalMinute = when (nouaCutie) {
+                    1 -> 0L
+                    2 -> 2L   // Peste 2 minute
+                    3 -> 5L   // Peste 5 minute
+                    4 -> 15L  // Peste 15 minute
+                    5 -> 60L  // Peste o oră
+                    else -> 0L
+                }
+            } else {
+                nouaCutie = 1
+                intervalMinute = 0L
+            }
+
+            val milisecundeInMinut = 60 * 1000L
+            val dataViitoareRepetare = System.currentTimeMillis() + (intervalMinute * milisecundeInMinut)
+
+            val cardActualizat = card.copy(
+                boxNumber = nouaCutie,
+                nextReviewDate = dataViitoareRepetare
+            )
+
+            repository.updateCard(cardActualizat)
+
+            try {
+                val request = CardRequest(
+                    deckId = cardActualizat.deckId,
+                    fata = cardActualizat.frontText,
+                    spate = cardActualizat.backText,
+                    cutie = cardActualizat.boxNumber,
+                    dataViitoare = cardActualizat.nextReviewDate
+                )
+                RetrofitClient.api.updateCard(cardActualizat.id, request)
+            } catch (e: Exception) {
+                Log.e("LEITNER", "Fără net, salvăm progresul doar local.")
+            }
+        }
+    }
 }

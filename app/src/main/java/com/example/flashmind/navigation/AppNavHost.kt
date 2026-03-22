@@ -1,7 +1,6 @@
 package com.example.flashmind.navigation
 
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,6 +23,7 @@ import com.example.flashmind.screen.ViewCardsScreen
 import com.example.flashmind.viewmodel.FlashcardViewModel
 
 import com.example.flashmind.SessionManager
+import com.example.flashmind.screen.ManageAccountScreen
 import com.example.flashmind.screen.SettingsScreen
 
 @Composable
@@ -62,7 +62,7 @@ fun AppNavHost(
 
         composable(Screens.DeckList.route) {
             val decks by viewModel.decks.collectAsState()
-            val userId = sessionManager.iaUserId()
+            val userId = sessionManager.getUserId()
 
             DeckListScreen(
                 decks = decks,
@@ -97,7 +97,7 @@ fun AppNavHost(
                 navController = navController,
                 onCreateClick = { deckName ->
 
-                    val userId = sessionManager.iaUserId()
+                    val userId = sessionManager.getUserId()
 
                     viewModel.createDeck(deckName, userId)
 
@@ -168,13 +168,22 @@ fun AppNavHost(
             val deckId = backStackEntry.arguments?.getInt("deckId") ?: 0
             val deckName = backStackEntry.arguments?.getString("deckName") ?: "Study"
 
-            val cards by viewModel.getCards(deckId).collectAsState(initial = emptyList())
+            val allCards by viewModel.getCards(deckId).collectAsState(initial = emptyList())
+
+            val cardsToStudy = remember(allCards.size) {
+                allCards.filter { it.nextReviewDate <= System.currentTimeMillis() }
+            }
 
             StudyScreen(
                 navController = navController,
                 deckName = deckName,
-                cards = cards,
-                onBackClick = { navController.popBackStack() }
+                cards = cardsToStudy,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onEvaluateCard = { cardEvaluat, aStiut ->
+                    viewModel.evalueazaCartonas(cardEvaluat, aStiut)
+                }
             )
         }
 
@@ -186,6 +195,14 @@ fun AppNavHost(
                         onBackClick = {
                     navController.popBackStack()
                 }
+            )
+        }
+
+        composable(Screens.ManageAccount.route) {
+            ManageAccountScreen(
+                navController = navController,
+                sessionManager = sessionManager,
+                onBackClick = { navController.popBackStack() }
             )
         }
     }

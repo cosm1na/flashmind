@@ -40,4 +40,8 @@ class FlashcardRepository(private val dao: FlashcardDao) {
     suspend fun saveCardsFromServer(cards: List<CardEntity>) {
         dao.insertCards(cards)
     }
+
+//    fun getCardsToReview(deckId: Int): Flow<List<CardEntity>> {
+//        return dao.getCardsToReview(deckId, System.currentTimeMillis())
+//    }
 }

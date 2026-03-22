@@ -40,15 +40,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.flashmind.R
 import com.example.flashmind.SessionManager
 import com.example.flashmind.navigation.Screens
-import com.example.flashmind.ui.theme.FlashmindTheme
 import kotlinx.coroutines.launch
 
 import com.example.flashmind.network.AuthRequest
@@ -170,6 +167,10 @@ fun LoginScreen(
                                                 Toast.makeText(context, pachetLogin.mesaj, Toast.LENGTH_SHORT).show()
 
                                                 sessionManager.salveazaStareaDeLogin(true)
+                                                sessionManager.saveEmail(email)
+
+                                                pachetLogin.username?.let { sessionManager.saveUsername(it) }
+                                                pachetLogin.pozaProfil?.let { sessionManager.saveProfilePicUri(it) }
 
                                                 if (pachetLogin.userId != null) {
                                                     sessionManager.salveazaUserId(pachetLogin.userId)

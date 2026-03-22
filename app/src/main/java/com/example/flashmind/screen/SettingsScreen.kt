@@ -13,12 +13,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale // Import nou
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage // Import nou
 import com.example.flashmind.R
 import com.example.flashmind.SessionManager
 import com.example.flashmind.navigation.Screens
@@ -33,6 +35,9 @@ fun SettingsScreen(
 ) {
     val userEmail = sessionManager.getEmail() ?: "utilizator@email.com"
     val initial = userEmail.take(1).uppercase()
+
+    val profilePicUri = sessionManager.getProfilePicUri()
+    val username = sessionManager.getUsername()
 
     Box(
         modifier = Modifier
@@ -89,18 +94,28 @@ fun SettingsScreen(
                             .background(colorResource(R.color.purple1)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = initial,
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
+                        if (!profilePicUri.isNullOrEmpty()) {
+                            AsyncImage(
+                                model = profilePicUri,
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Text(
+                                text = initial,
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Connected Account",
+                        // Arată username-ul dacă l-a setat, altfel scrie "Connected Account"
+                        text = if (!username.isNullOrEmpty()) username else "Connected Account",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
@@ -115,7 +130,7 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(30.dp))
 
                     Button(
-                        onClick = { /* TODO:manage account */ },
+                        onClick = { navController.navigate(Screens.ManageAccount.route) },
                         modifier = Modifier
                             .fillMaxWidth(0.8f)
                             .height(45.dp),
@@ -155,7 +170,7 @@ fun SettingsScreen(
                     text = "LOG OUT",
                     color = Color.Red,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp // Font un pic mai mic
+                    fontSize = 14.sp
                 )
             }
 

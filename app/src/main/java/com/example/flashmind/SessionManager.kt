@@ -18,11 +18,11 @@ class SessionManager(context: Context) {
         prefs.edit().putInt("USER_ID", id).apply()
     }
 
-    fun iaUserId(): Int {
+    fun getUserId(): Int {
         return prefs.getInt("USER_ID", -1)
     }
 
-    fun salveazaEmail(email: String) {
+    fun saveEmail(email: String) {
         prefs.edit().putString("USER_EMAIL", email).apply()
     }
 
@@ -31,6 +31,22 @@ class SessionManager(context: Context) {
     }
     fun logout() {
         prefs.edit().clear().apply()
+    }
+
+    fun saveUsername(username: String) {
+        prefs.edit().putString("USERNAME", username).apply()
+    }
+
+    fun getUsername(): String? {
+        return prefs.getString("USERNAME", null)
+    }
+
+    fun saveProfilePicUri(uri: String) {
+        prefs.edit().putString("PROFILE_PIC", uri).apply()
+    }
+
+    fun getProfilePicUri(): String? {
+        return prefs.getString("PROFILE_PIC", null)
     }
 
 }

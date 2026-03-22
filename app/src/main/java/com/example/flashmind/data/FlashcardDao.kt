@@ -22,7 +22,7 @@ interface FlashcardDao {
     @Delete
     suspend fun deleteCard(card: CardEntity)
 
-    @Update
+    @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateCard(card: CardEntity)
 
     @Update
@@ -36,5 +36,8 @@ interface FlashcardDao {
 
     @Query("DELETE FROM decks")
     suspend fun clearAll()
+
+    @Query("SELECT * FROM cards WHERE deckId = :deckId AND nextReviewDate <= :currentTime")
+    fun getCardsToReview(deckId: Int, currentTime: Long): Flow<List<CardEntity>>
 
 }

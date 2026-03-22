@@ -30,7 +30,8 @@ fun StudyScreen(
     navController: NavController,
     deckName: String = "Study",
     cards: List<CardEntity>,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onEvaluateCard: (CardEntity, Boolean) -> Unit = { _, _ -> }
 ) {
     var currentIndex by remember { mutableIntStateOf(0) }
     var isFlipped by remember { mutableStateOf(false) }
@@ -90,11 +91,11 @@ fun StudyScreen(
             Spacer(modifier = Modifier.height(50.dp))
 
             if (cards.isEmpty()) {
-                Text("No cards to study!", fontSize = 18.sp, color = Color.Black)
+                Text("No cards to study right now!", fontSize = 18.sp, color = Color.Black)
             } else if (isFinished) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = " Good job! \n",
+                        text = " Good job! \n You've finished this session.",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
@@ -105,7 +106,7 @@ fun StudyScreen(
                         onClick = { onBackClick() },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                     ) {
-                        Text("back", color = Color.Black)
+                        Text("back to deck", color = Color.Black)
                     }
                 }
             } else {
@@ -163,31 +164,52 @@ fun StudyScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 40.dp, start = 30.dp, end = 30.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(bottom = 50.dp, start = 30.dp, end = 30.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Button(
                             onClick = {
+                                onEvaluateCard(currentCard, false)
                                 isFlipped = false
                                 currentIndex++
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                             shape = RoundedCornerShape(50),
-                            modifier = Modifier.fillMaxWidth().height(50.dp)
+                            modifier = Modifier.weight(1f).height(55.dp),
+                            elevation = ButtonDefaults.buttonElevation(2.dp)
                         ) {
                             Text(
-                                text = "Next Card",
-                                color = Color.Black,
+                                text = "AGAIN ",
+                                color = Color.Red,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontSize = 15.sp
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                onEvaluateCard(currentCard, true)
+                                isFlipped = false
+                                currentIndex++
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier.weight(1f).height(55.dp),
+                            elevation = ButtonDefaults.buttonElevation(2.dp)
+                        ) {
+                            Text(
+                                text = "GOT IT ",
+                                color = Color(0xFF2E7D32),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
                             )
                         }
                     }
                 } else {
                     Text(
-                        text = "click to see the answer",
+                        text = "click the card to see the answer",
                         color = Color.DarkGray,
-                        modifier = Modifier.padding(bottom = 50.dp)
+                        modifier = Modifier.padding(bottom = 60.dp)
                     )
                 }
             }
