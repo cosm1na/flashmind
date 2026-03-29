@@ -1,7 +1,6 @@
 package com.example.flashmind.screen
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +45,13 @@ import com.example.flashmind.R
 import com.example.flashmind.SessionManager
 import com.example.flashmind.navigation.Screens
 import kotlinx.coroutines.launch
+
+// Importuri Lottie
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 
 import com.example.flashmind.network.AuthRequest
 import com.example.flashmind.network.RetrofitClient
@@ -73,15 +78,23 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 70.dp),
+                .padding(top = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(R.drawable.flashcard),
-                contentDescription = "flashmind icon",
-                modifier = Modifier.size(50.dp)
+
+            val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.login))
+            val progress by animateLottieCompositionAsState(
+                composition,
+                iterations = LottieConstants.IterateForever
             )
-            Spacer(modifier = Modifier.height(110.dp))
+
+            LottieAnimation(
+                composition = composition,
+                progress = { progress },
+                modifier = Modifier.size(150.dp)
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
 
             Card(
                 modifier = Modifier
@@ -174,8 +187,7 @@ fun LoginScreen(
 
                                                 if (pachetLogin.userId != null) {
                                                     sessionManager.salveazaUserId(pachetLogin.userId)
-
-                                                    flashcardViewModel.sincronizeazaDateDePeServer(pachetLogin.userId)
+                                                    flashcardViewModel.loadDecks(pachetLogin.userId)
                                                 }
 
                                                 navController.navigate(Screens.DeckList.route) {

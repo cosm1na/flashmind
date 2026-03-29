@@ -1,5 +1,8 @@
 package com.example.flashmind.screen
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,12 +24,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -36,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,10 +55,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.flashmind.R
 import com.example.flashmind.data.DeckEntity
+import com.example.flashmind.network.uploadPdfBytesToServer
+import kotlinx.coroutines.launch
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 
 @Composable
 fun DeckListScreen(
+    userId: Int,
     decks: List<DeckEntity>,
+    onRefreshDecks: (Int) -> Unit = {},
     onCreateDeckClick: () -> Unit = {},
     onDeckClick: (Int) -> Unit = {},
     onDeleteDeckClick: (DeckEntity) -> Unit = {},
@@ -61,6 +79,26 @@ fun DeckListScreen(
     var deckToEdit by remember { mutableStateOf<DeckEntity?>(null) }
     var newDeckName by remember { mutableStateOf("") }
     var deckToDelete by remember { mutableStateOf<DeckEntity?>(null) }
+
+    var pdfBytesToUpload by remember { mutableStateOf<ByteArray?>(null) }
+    var pdfDeckName by remember { mutableStateOf("") }
+    var isGenerating by remember { mutableStateOf(false) }
+
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    val pdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+            if (bytes != null) {
+                pdfBytesToUpload = bytes
+                pdfDeckName = ""
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -94,9 +132,7 @@ fun DeckListScreen(
                         title = deck.title,
                         index = index,
                         onClick = { onDeckClick(deck.id) },
-                        onDeleteClick = {
-                            deckToDelete = deck
-                        },
+                        onDeleteClick = { deckToDelete = deck },
                         onEditClick = {
                             deckToEdit = deck
                             newDeckName = deck.title
@@ -104,6 +140,24 @@ fun DeckListScreen(
                     )
                 }
             }
+        }
+
+        FloatingActionButton(
+            onClick = { pdfLauncher.launch("application/pdf") },
+            containerColor = Color.White,
+            contentColor = colorResource(R.color.purple2),
+            shape = CircleShape,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 20.dp, bottom = 90.dp)
+                .size(56.dp),
+            elevation = FloatingActionButtonDefaults.elevation(6.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.PictureAsPdf,
+                contentDescription = "Upload PDF",
+                modifier = Modifier.size(28.dp)
+            )
         }
 
         Row(
@@ -150,9 +204,7 @@ fun DeckListScreen(
     if (deckToEdit != null) {
         AlertDialog(
             onDismissRequest = { deckToEdit = null },
-            title = {
-                Text(text = "Edit Deck Name", fontWeight = FontWeight.Bold, color = Color.Black)
-            },
+            title = { Text(text = "Edit Deck Name", fontWeight = FontWeight.Bold, color = Color.Black) },
             text = {
                 OutlinedTextField(
                     value = newDeckName,
@@ -173,9 +225,7 @@ fun DeckListScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { deckToEdit = null }) {
-                    Text("Cancel", color = Color.Gray)
-                }
+                TextButton(onClick = { deckToEdit = null }) { Text("Cancel", color = Color.Gray) }
             }
         )
     }
@@ -183,29 +233,98 @@ fun DeckListScreen(
     if (deckToDelete != null) {
         AlertDialog(
             onDismissRequest = { deckToDelete = null },
-            title = {
-                Text(text = "Delete Deck", fontWeight = FontWeight.Bold, color = Color.Black)
+            title = { Text(text = "Delete Deck", fontWeight = FontWeight.Bold, color = Color.Black) },
+            text = { Text(text = "Are you sure you want to delete '${deckToDelete?.title}'?", color = Color.DarkGray) },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDeleteDeckClick(deckToDelete!!)
+                    deckToDelete = null
+                }) { Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold) }
             },
+            dismissButton = {
+                TextButton(onClick = { deckToDelete = null }) { Text("Cancel", color = Color.Gray) }
+            }
+        )
+    }
+
+    if (pdfBytesToUpload != null) {
+        AlertDialog(
+            onDismissRequest = { pdfBytesToUpload = null },
+            title = { Text(text = "Nume Pachet Nou", fontWeight = FontWeight.Bold, color = Color.Black) },
             text = {
-                Text(
-                    text = "Are you sure you want to delete '${deckToDelete?.title}'?",
-                    color = Color.DarkGray
+                OutlinedTextField(
+                    value = pdfDeckName,
+                    onValueChange = { pdfDeckName = it },
+                    label = { Text("Ex: Curs Istorie") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
-                    onDeleteDeckClick(deckToDelete!!)
-                    deckToDelete = null // Închidem dialogul
-                }) {
-                    Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
-                }
+                    if (pdfDeckName.isNotBlank() && pdfBytesToUpload != null) {
+                        val bytesToSend = pdfBytesToUpload!!
+                        val nameToSend = pdfDeckName
+
+                        pdfBytesToUpload = null
+                        isGenerating = true
+
+                        coroutineScope.launch {
+                            try {
+                                uploadPdfBytesToServer(bytesToSend, nameToSend, userId)
+                                onRefreshDecks(userId)
+                            } catch (e: Exception) {
+                                println("Eroare la upload: ${e.message}")
+                            } finally {
+                                isGenerating = false
+                            }
+                        }
+                    }
+                }) { Text("Generează din PDF", color = colorResource(R.color.purple2), fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
-                TextButton(onClick = { deckToDelete = null }) {
-                    Text("Cancel", color = Color.Gray)
-                }
+                TextButton(onClick = { pdfBytesToUpload = null }) { Text("Anulează", color = Color.Gray) }
             }
         )
+    }
+
+    if (isGenerating) {
+        Dialog(
+            onDismissRequest = { /* Nu lăsăm utilizatorul să închidă dând click pe lângă */ },
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(200.dp)
+                    .background(Color.White, RoundedCornerShape(24.dp))
+                    .padding(16.dp)
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Încărcăm animația
+                    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ai_loading)) // <-- SCHIMBĂ AICI numele dacă fișierul tău se numește altfel
+                    val progress by animateLottieCompositionAsState(
+                        composition,
+                        iterations = LottieConstants.IterateForever // Repetă la infinit
+                    )
+
+                    LottieAnimation(
+                        composition = composition,
+                        progress = { progress },
+                        modifier = Modifier.size(120.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "AI-ul generează...",
+                        fontWeight = FontWeight.Bold,
+                        color = colorResource(R.color.purple2)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -218,7 +337,6 @@ fun DeckCard(
     onDeleteClick: () -> Unit
 ) {
     val isEven = index % 2 == 0
-
     val paddingStart = if (isEven) 30.dp else 60.dp
     val paddingEnd = if (isEven) 60.dp else 30.dp
 

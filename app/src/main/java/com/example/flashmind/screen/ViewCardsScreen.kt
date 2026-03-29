@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,13 +49,10 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.flashmind.R
-import com.example.flashmind.ui.theme.FlashmindTheme
 import com.example.flashmind.data.CardEntity
 
 @Composable
@@ -77,6 +75,7 @@ fun ViewCardsScreen(
             .fillMaxSize()
             .background(colorResource(R.color.purple2))
     ) {
+
         IconButton(
             onClick = { onBackClick() },
             modifier = Modifier
@@ -93,8 +92,7 @@ fun ViewCardsScreen(
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 70.dp),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(70.dp))
@@ -111,7 +109,9 @@ fun ViewCardsScreen(
                 text = deckName,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.Black,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 20.dp)
             )
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -141,7 +141,7 @@ fun ViewCardsScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 40.dp),
+                    contentPadding = PaddingValues(start = 40.dp, end = 40.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(
@@ -208,9 +208,7 @@ fun ViewCardsScreen(
 
             AlertDialog(
                 onDismissRequest = { cardToEdit = null },
-                title = {
-                    Text(text = "Edit Card", fontWeight = FontWeight.Bold)
-                },
+                title = { Text(text = "Edit Card", fontWeight = FontWeight.Bold) },
                 text = {
                     Column {
                         OutlinedTextField(
@@ -250,9 +248,7 @@ fun ViewCardsScreen(
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { cardToEdit = null }) {
-                        Text("Cancel", color = Color.Gray)
-                    }
+                    TextButton(onClick = { cardToEdit = null }) { Text("Cancel", color = Color.Gray) }
                 }
             )
         }
@@ -260,9 +256,7 @@ fun ViewCardsScreen(
         if (cardToDelete != null) {
             AlertDialog(
                 onDismissRequest = { cardToDelete = null },
-                title = {
-                    Text(text = "Delete Card", fontWeight = FontWeight.Bold, color = Color.Black)
-                },
+                title = { Text(text = "Delete Card", fontWeight = FontWeight.Bold, color = Color.Black) },
                 text = {
                     Text(
                         text = "Are you sure you want to delete this card?\n\n\"${cardToDelete?.frontText}\"",
@@ -273,14 +267,10 @@ fun ViewCardsScreen(
                     TextButton(onClick = {
                         onDeleteCardClick(cardToDelete!!)
                         cardToDelete = null
-                    }) {
-                        Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold)
-                    }
+                    }) { Text("Delete", color = Color.Red, fontWeight = FontWeight.Bold) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { cardToDelete = null }) {
-                        Text("Cancel", color = Color.Gray)
-                    }
+                    TextButton(onClick = { cardToDelete = null }) { Text("Cancel", color = Color.Gray) }
                 }
             )
         }
@@ -296,15 +286,15 @@ fun FlashcardItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp),
+            .defaultMinSize(minHeight = 60.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -312,14 +302,15 @@ fun FlashcardItem(
                 text = cardTitle,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 12.dp)
             )
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Buton EDIT (Mov închis)
                 Box(
                     modifier = Modifier
                         .size(30.dp)
@@ -353,13 +344,5 @@ fun FlashcardItem(
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ViewCardsPreview() {
-    FlashmindTheme {
-        ViewCardsScreen(navController = rememberNavController())
     }
 }

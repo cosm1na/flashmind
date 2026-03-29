@@ -1,5 +1,6 @@
 package com.example.flashmind.screen
 
+import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,6 +33,8 @@ import com.example.flashmind.SessionManager
 import kotlinx.coroutines.launch
 import com.example.flashmind.network.UpdateProfileRequest
 import com.example.flashmind.network.RetrofitClient
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun ManageAccountScreen(
@@ -46,13 +49,17 @@ fun ManageAccountScreen(
     val initial = email.take(1).uppercase()
 
     var username by remember { mutableStateOf(sessionManager.getUsername() ?: "") }
-    var imageUri by remember { mutableStateOf<Uri?>(sessionManager.getProfilePicUri()?.let { Uri.parse(it) }) }
+
+    var imagePath by remember { mutableStateOf(sessionManager.getProfilePicUri()) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            imageUri = it
+            val savedPath = saveImageToInternalStorage(context, it)
+            if (savedPath != null) {
+                imagePath = savedPath
+            }
         }
     }
 
@@ -101,9 +108,9 @@ fun ManageAccountScreen(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                if (imageUri != null) {
+                if (!imagePath.isNullOrEmpty()) {
                     AsyncImage(
-                        model = imageUri,
+                        model = imagePath,
                         contentDescription = "Profile Picture",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -156,7 +163,7 @@ fun ManageAccountScreen(
                 value = email,
                 onValueChange = {},
                 label = { Text("Email Address") },
-                readOnly = true, // Nu îl lăsăm să schimbe emailul
+                readOnly = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -170,10 +177,10 @@ fun ManageAccountScreen(
 
             Button(
                 onClick = {
-                    val finalUri = imageUri?.toString() ?: ""
+                    val finalPath = imagePath ?: ""
 
                     sessionManager.saveUsername(username)
-                    sessionManager.saveProfilePicUri(finalUri)
+                    sessionManager.saveProfilePicUri(finalPath)
 
                     coroutineScope.launch {
                         try {
@@ -181,7 +188,7 @@ fun ManageAccountScreen(
                             if (userId != -1) {
                                 val cerere = UpdateProfileRequest(
                                     username = username,
-                                    pozaProfil = finalUri
+                                    pozaProfil = finalPath
                                 )
                                 val raspuns = RetrofitClient.api.updateProfile(userId, cerere)
 
@@ -212,5 +219,23 @@ fun ManageAccountScreen(
                 )
             }
         }
+    }
+}
+fun saveImageToInternalStorage(context: Context, uri: Uri): String? {
+    return try {
+        val fileName = "profile_image_${System.currentTimeMillis()}.jpg"
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val file = File(context.filesDir, fileName)
+        val outputStream = FileOutputStream(file)
+
+        inputStream?.use { input ->
+            outputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
+        file.absolutePath
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }

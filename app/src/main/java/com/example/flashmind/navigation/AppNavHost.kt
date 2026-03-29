@@ -65,7 +65,11 @@ fun AppNavHost(
             val userId = sessionManager.getUserId()
 
             DeckListScreen(
+                userId = userId,
                 decks = decks,
+                onRefreshDecks = { id: Int ->
+                    viewModel.loadDecks(id)
+                },
                 onCreateDeckClick = {
                     navController.navigate(Screens.CreateDeck.route)
                 },
@@ -75,11 +79,6 @@ fun AppNavHost(
 
                     navController.navigate(Screens.ViewCards.createRoute(deckId, selectedDeckName))
                 },
-//                onBackClick = {
-//                    navController.navigate(Screens.Welcome.route) {
-//                        popUpTo(0)
-//                    }
-//                },
                 onDeleteDeckClick = { deckToDelete ->
                     viewModel.deleteDeck(deckToDelete)
                 },

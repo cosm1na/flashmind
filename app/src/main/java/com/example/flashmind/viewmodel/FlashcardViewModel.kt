@@ -144,7 +144,7 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
         }
     }
 
-    fun sincronizeazaDateDePeServer(userId: Int) {
+    fun loadDecks(userId: Int) {
         viewModelScope.launch {
             try {
                 val raspunsDecks = RetrofitClient.api.getDecks(userId)
