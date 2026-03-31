@@ -199,10 +199,10 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
 
                 intervalMinute = when (nouaCutie) {
                     1 -> 0L
-                    2 -> 2L   // Peste 2 minute
-                    3 -> 5L   // Peste 5 minute
-                    4 -> 15L  // Peste 15 minute
-                    5 -> 60L  // Peste o oră
+                    2 -> 2L
+                    3 -> 5L
+                    4 -> 15L
+                    5 -> 60L
                     else -> 0L
                 }
             } else {
@@ -232,6 +232,13 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
             } catch (e: Exception) {
                 Log.e("LEITNER", "Fără net, salvăm progresul doar local.")
             }
+        }
+    }
+
+    fun markDeckAsFinished(deck: DeckEntity) {
+        viewModelScope.launch {
+            val updatedDeck = deck.copy(lastFinishedTimestamp = System.currentTimeMillis())
+            repository.updateDeck(updatedDeck)
         }
     }
 }

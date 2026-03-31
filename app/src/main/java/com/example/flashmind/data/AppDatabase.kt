@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [DeckEntity::class, CardEntity::class], version = 1)
+@Database(entities = [DeckEntity::class, CardEntity::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun flashcardDao(): FlashcardDao
@@ -20,7 +20,10 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "flashmind_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+
                 INSTANCE = instance
                 instance
             }

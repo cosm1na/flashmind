@@ -23,6 +23,7 @@ import com.example.flashmind.screen.ViewCardsScreen
 import com.example.flashmind.viewmodel.FlashcardViewModel
 
 import com.example.flashmind.SessionManager
+import com.example.flashmind.data.DeckEntity
 import com.example.flashmind.screen.ManageAccountScreen
 import com.example.flashmind.screen.SettingsScreen
 
@@ -165,23 +166,19 @@ fun AppNavHost(
             )
         ) { backStackEntry ->
             val deckId = backStackEntry.arguments?.getInt("deckId") ?: 0
-            val deckName = backStackEntry.arguments?.getString("deckName") ?: "Study"
+            val decks by viewModel.decks.collectAsState()
+            val selectedDeck = decks.find { it.id == deckId } ?: DeckEntity(id = deckId, title = "Study")
 
             val allCards by viewModel.getCards(deckId).collectAsState(initial = emptyList())
 
-            val cardsToStudy = remember(allCards.size) {
-                allCards.filter { it.nextReviewDate <= System.currentTimeMillis() }
-            }
-
             StudyScreen(
                 navController = navController,
-                deckName = deckName,
-                cards = cardsToStudy,
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onEvaluateCard = { cardEvaluat, aStiut ->
-                    viewModel.evalueazaCartonas(cardEvaluat, aStiut)
+                deck = selectedDeck,
+                allCards = allCards,
+                viewModel = viewModel,
+                onBackClick = { navController.popBackStack() },
+                onEvaluateCard = { card, aStiut ->
+                    viewModel.evalueazaCartonas(card, aStiut)
                 }
             )
         }

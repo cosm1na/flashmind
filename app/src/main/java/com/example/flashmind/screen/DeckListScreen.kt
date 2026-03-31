@@ -64,6 +64,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.flashmind.bounceClick
 
 @Composable
 fun DeckListScreen(
@@ -302,11 +303,10 @@ fun DeckListScreen(
                     .padding(16.dp)
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Încărcăm animația
-                    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ai_loading)) // <-- SCHIMBĂ AICI numele dacă fișierul tău se numește altfel
+                    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ai_loading))
                     val progress by animateLottieCompositionAsState(
                         composition,
-                        iterations = LottieConstants.IterateForever // Repetă la infinit
+                        iterations = LottieConstants.IterateForever
                     )
 
                     LottieAnimation(
@@ -344,7 +344,7 @@ fun DeckCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = paddingStart, end = paddingEnd, bottom = 16.dp)
-            .clickable { onClick() },
+            .bounceClick() { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)

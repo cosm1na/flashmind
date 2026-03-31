@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class DeckEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val title: String
+    val title: String,
+    val lastFinishedTimestamp: Long = 0L
 )
